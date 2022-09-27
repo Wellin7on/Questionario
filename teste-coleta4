@@ -1,0 +1,60 @@
+namespace Questionario.Api.Model;
+
+public class FileJson
+{
+    public IList<Pergunta> Pergunta { get; set; }
+
+    public int QuantidadePositiva
+    {
+        get
+        {
+            var count = 0;
+            foreach (var pergunta in Pergunta)
+            {
+                if (pergunta.Pergunta1.ToUpper().Equals("SIM"))
+                    count++;
+                
+                if (pergunta.Pergunta2.ToUpper().Equals("SIM"))
+                    count++;
+                
+                if (pergunta.Pergunta3.ToUpper().Equals("SIM"))
+                    count++;
+                else if (pergunta.Pergunta3.ToUpper().Equals("AGORA!!"))
+                    count += 2;
+            }
+            return count;
+        }
+    }
+    public int QuantidadeNegativa     
+    {
+        get
+        {
+            var count = 0;
+            foreach (var pergunta in Pergunta)
+            {
+                if (pergunta.Pergunta1.ToUpper().Equals("NÃO"))
+                    count++;
+                
+                if (pergunta.Pergunta2.ToUpper().Equals("NÃO"))
+                    count++;
+                
+                if (pergunta.Pergunta3.ToUpper().Equals("NÃO"))
+                    count++;
+            }
+            return count;
+        }
+    }
+    public int QuantidadeNaoAvaliada 
+    {
+        get
+        {
+            var count = 0;
+            foreach (var pergunta in Pergunta)
+            {
+                if (pergunta.Pergunta3.ToUpper().Equals("NÃO SEI"))
+                    count++;
+            }
+            return count;
+        }
+    }
+}
