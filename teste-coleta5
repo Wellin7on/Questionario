@@ -1,0 +1,9 @@
+namespace Questionario.Api.Model;
+
+public class Pergunta
+{
+    public string Pergunta1 { get; set; }
+    public string Pergunta2 { get; set; }
+    public string Pergunta3 { get; set; }
+    public string Pergunta4 { get; set; }
+}
