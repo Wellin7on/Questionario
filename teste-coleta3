@@ -1,0 +1,19 @@
+using Questionario.Api.Dto.Request;
+
+namespace Questionario.Api.Dto.Response;
+
+public class FileJsonDto
+{
+    public int TotalResposta { get; set; }
+    public int QuantidadePositiva { get; set; }
+
+    public int QuantidadeNegativa { get; set; }
+
+    public int QuantidadeNaoAvaliada { get; set; }
+
+    public double PorcentagemPositiva { get; set; }
+    
+    public double PorcentagemNegativa { get; set; }
+
+    public double PorcentagemNaoAvaliada { get; set; }
+}
