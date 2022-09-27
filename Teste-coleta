@@ -1,0 +1,121 @@
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Unicode;
+using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using Questionario.Api.Dto.Request;
+using Questionario.Api.Dto.Response;
+using Questionario.Api.Model;
+using JsonSerializer = System.Text.Json.JsonSerializer;
+
+namespace Questionario.Api.Controllers;
+
+[ApiController]
+[Route("[controller]")]
+public class QuestionarioController : ControllerBase
+{
+    private readonly string _fullPath = Path.Combine(@"C:\Users\carlos.junior\Documents\File");
+    private readonly string _fileName = "file.json";
+    private readonly ILogger<QuestionarioController> _logger;
+
+    public QuestionarioController(ILogger<QuestionarioController> logger)
+    {
+        _logger = logger;
+    }
+
+    [HttpPost]
+    public IActionResult Post(PerguntaRequestDto model)
+    {
+        if (!model.Pergunta1.ToUpper().Equals("SIM") && !model.Pergunta1.ToUpper().Equals("NÃO"))
+            return BadRequest("Verfique a resposta da pergunta 1.");
+
+        if (!model.Pergunta2.ToUpper().Equals("SIM") && !model.Pergunta2.ToUpper().Equals("NÃO"))
+            return BadRequest("Verfique a resposta da pergunta 2.");
+
+        if (!model.Pergunta3.ToUpper().Equals("SIM") && !model.Pergunta3.ToUpper().Equals("NÃO")
+                                                           && !model.Pergunta3.ToUpper().Equals("NÃO SEI") &&
+                                                           !model.Pergunta3.ToUpper().Equals("AGORA!!"))
+            return BadRequest("Verfique a resposta da pergunta 3.");
+
+        if (model.Pergunta4.Length > 200 || model.Pergunta4.Length < 15)
+            return BadRequest("A pergunta 4 deve ter entre 15 e 200 caracteres.");
+
+        FileJson file;
+        
+        if (!VerificaDiretorio())
+        {
+            file = new FileJson
+            {
+                Pergunta = new List<Pergunta>()
+                {
+                    new Pergunta
+                    {
+                        Pergunta1 = model.Pergunta1,
+                        Pergunta2 = model.Pergunta2,
+                        Pergunta3 = model.Pergunta3,
+                        Pergunta4 = model.Pergunta4
+                    }
+                }
+            };
+            SalvarArquivo(file);
+        }
+        else
+        { 
+            file = LerArquivo();
+            file.Pergunta.Add(new Pergunta
+            {
+                Pergunta1 = model.Pergunta1,
+                Pergunta2 = model.Pergunta2,
+                Pergunta3 = model.Pergunta3,
+                Pergunta4 = model.Pergunta4
+            });
+            SalvarArquivo(file);
+        }
+        
+        var totalRespostas = file.QuantidadePositiva + file.QuantidadeNegativa + file.QuantidadeNaoAvaliada;
+        var response = new FileJsonDto
+        {
+            QuantidadeNegativa = file.QuantidadeNegativa,
+            QuantidadePositiva = file.QuantidadePositiva,
+            QuantidadeNaoAvaliada = file.QuantidadeNaoAvaliada,
+            TotalResposta = totalRespostas,
+            PorcentagemPositiva = Math.Round(((double)file.QuantidadePositiva / totalRespostas) * 100,2),
+            PorcentagemNegativa = Math.Round(((double)file.QuantidadeNegativa / totalRespostas) * 100,2),
+            PorcentagemNaoAvaliada = Math.Round(((double)file.QuantidadeNaoAvaliada / totalRespostas) * 100,2)
+        };
+        
+        return Ok(response);
+    }
+
+    private bool VerificaDiretorio()
+    {
+        var isCreated = true;
+        if (!Directory.Exists(_fullPath))
+        {
+            Directory.CreateDirectory(_fullPath);
+            isCreated = false;
+        }
+        else if (!System.IO.File.Exists(Path.Combine(_fullPath, _fileName)))
+            isCreated = false;
+
+        return isCreated;
+    }
+
+    private void SalvarArquivo(FileJson file)
+    {
+        var options = new JsonSerializerOptions
+        {
+            Encoder = JavaScriptEncoder.Create(UnicodeRanges.BasicLatin),
+            WriteIndented = true
+        };
+        System.IO.File.WriteAllText(Path.Combine(_fullPath, _fileName), JsonSerializer.Serialize(file, options));
+    }
+
+    private FileJson? LerArquivo()
+    {
+        FileJson? file;
+
+        var stream = System.IO.File.ReadAllText(Path.Combine(_fullPath, _fileName));
+        return JsonConvert.DeserializeObject<FileJson>(stream);
+    }
+}
